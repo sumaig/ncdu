@@ -50,6 +50,11 @@ func main() {
 	// common command
 	cmd := "ncdu -o-"
 
+	// specify directory
+	if len(os.Args) == 2 && os.Args[1] != "" {
+		cmd = fmt.Sprintf("ncdu %s -o-", os.Args[1])
+	}
+
 	// support cross
 	if cross {
 		cmd = cmd + "-x"
@@ -87,6 +92,7 @@ func main() {
 	doneSignal <- struct{}{}
 	fmt.Print("\rProgress: 100%")
 	os.Stdout.Sync()
+	fmt.Println()
 	result.OutPut()
 }
 

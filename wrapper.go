@@ -33,9 +33,9 @@ func (r *Result) OutPut() {
 		limit = count
 	}
 
-	message := fmt.Sprintf("\t%-20s%-20s%-20s\r\n", "path", "size", "inode")
+	message := fmt.Sprintf("\t%-50s%-50s%-50s\r\n", "path", "size", "inode")
 	for i := 0; i < limit; i++ {
-		message += fmt.Sprintf("\t%-20s%-20s%-20s\r\n", r.msg[r.top[i]].Name, r.msg[r.top[i]].Asize, r.msg[r.top[i]].Ino)
+		message += fmt.Sprintf("\t%-50s%-50d%-50d\r\n", r.msg[r.top[i]].Name, r.msg[r.top[i]].Asize, r.msg[r.top[i]].Ino)
 	}
 
 	fmt.Println(message)
@@ -88,7 +88,6 @@ func Wrapper(cmd string, timeout int) {
 		fmt.Println("json unmarshal error: ", err)
 	}
 
-	fmt.Println(message[3])
 	walker(message[3])
 }
 
@@ -133,17 +132,36 @@ func walker(i interface{}) {
 		for t, v := range i {
 			x, ok := v.(map[string]interface{})
 			if ok {
-				p := x["name"].(string)
-				a := x["asize"].(float64)
-				in := x["ino"].(float64)
+				// ignore hlnkc
+				if _, ok := x["hlnkc"]; ok {
+					continue
+				}
+
+				// ignore notreg
+				if _, ok := x["notreg"]; ok {
+					continue
+				}
+
+				p, ok := x["name"].(string)
+				if !ok {
+					continue
+				}
+				a, ok := x["asize"].(float64)
+				if !ok {
+					continue
+				}
+				in, ok := x["ino"].(float64)
+				if !ok {
+					continue
+				}
 				// TODO: Use file stat
-				if a == 4096 {
+				if uint64(a) == 4096 {
 					if t == 0 {
 						basePath = itemA(p)
-						// fmt.Println("base", basePath)
+						fmt.Println("base", basePath)
 					}
 					copyPath = itemB(p)
-					// fmt.Println("copy", copyPath)
+					fmt.Println("copy", copyPath)
 				} else {
 					p = path.Join(copyPath, p)
 					fmt.Println(p)
@@ -152,6 +170,7 @@ func walker(i interface{}) {
 						Asize: uint64(a),
 						Ino:   uint64(in),
 					}
+					// TODO: only append top 10 into slice
 					result.top = append(result.top, uint64(a))
 				}
 
@@ -159,9 +178,6 @@ func walker(i interface{}) {
 				walker(v)
 			}
 		}
-		fmt.Println(result.top)
-		QuickSort(result.top)
-		fmt.Println(result.top)
 	default:
 		// fmt.Println("default")
 	}
