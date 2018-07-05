@@ -31,7 +31,7 @@ func main() {
 	flag.Parse()
 
 	if helpMode {
-		fmt.Println("Usage: ncdu-wrapper dir [options]")
+		fmt.Println("Usage: wncdu dir [options]")
 		flag.PrintDefaults()
 		os.Exit(0)
 	}
@@ -51,23 +51,23 @@ func main() {
 	cmd := "ncdu -o-"
 
 	// specify directory
-	if len(os.Args) == 2 && os.Args[1] != "" {
+	if len(os.Args) > 1 && os.Args[1] != "" {
 		cmd = fmt.Sprintf("ncdu %s -o-", os.Args[1])
 	}
 
 	// support cross
 	if cross {
-		cmd = cmd + "-x"
+		cmd = cmd + " " + "-x"
 	}
 
 	// support exclude
 	if exclude != "" {
-		cmd = cmd + fmt.Sprintf("--exclude %s", exclude)
+		cmd = cmd + " " + fmt.Sprintf("--exclude %s", exclude)
 	}
 
 	// support read exclude from file
 	if from != "" {
-		cmd = cmd + fmt.Sprintf("--exclude-from %s", from)
+		cmd = cmd + " " + fmt.Sprintf("--exclude-from %s", from)
 	}
 
 	doneSignal := make(chan struct{})

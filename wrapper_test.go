@@ -8,7 +8,7 @@ import (
 
 func TestWalker(t *testing.T) {
 	a := `[1,1,{"progname":"ncdu","progver":"1.13","timestamp":1530704292},
-[{"name":"/home/gaoguangpeng/test","asize":4096,"dsize":4096,"dev":2049,"ino":268784},
+[{"name":"/Users/gaoguangpeng/test","asize":4096,"dsize":4096,"dev":2049,"ino":268784},
 {"name":"tb","asize":14,"dsize":4096,"ino":268947},
 [{"name":"l2","asize":4096,"dsize":4096,"ino":268949},
 {"name":"la","asize":13,"dsize":4096,"ino":268950},
@@ -33,16 +33,7 @@ func TestWalker(t *testing.T) {
 		t.Error(err)
 	}
 
-	walker(message[3])
-}
-
-func TestPathJoin(t *testing.T) {
-	p1 := "/Users/gaoguangpeng/test"
-	p2 := "tb"
-
-	pj := pathJoin()
-	fmt.Println(pj(p1))
-	fmt.Println(pj(p2))
+	walker(message[3], baseDir)
 }
 
 func TestQuickSort(t *testing.T) {

@@ -5,14 +5,20 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"os"
 	"os/exec"
 	"path"
 	"strings"
 	"syscall"
 	"time"
+
+	"github.com/dustin/go-humanize"
 )
 
 var message = make([]interface{}, 4)
+
+// directory stack
+var baseDir = make([]string, 0)
 
 type meta struct {
 	Name  string `json:"name"`
@@ -33,9 +39,9 @@ func (r *Result) OutPut() {
 		limit = count
 	}
 
-	message := fmt.Sprintf("\t%-50s%-50s%-50s\r\n", "path", "size", "inode")
+	message := fmt.Sprintf("%-120s%-10s%-10s\r\n", "path", "size", "inode")
 	for i := 0; i < limit; i++ {
-		message += fmt.Sprintf("\t%-50s%-50d%-50d\r\n", r.msg[r.top[i]].Name, r.msg[r.top[i]].Asize, r.msg[r.top[i]].Ino)
+		message += fmt.Sprintf("%-120s%-10s%-10d\r\n", r.msg[r.top[i]].Name, humanize.Bytes(r.msg[r.top[i]].Asize), r.msg[r.top[i]].Ino)
 	}
 
 	fmt.Println(message)
@@ -88,7 +94,7 @@ func Wrapper(cmd string, timeout int) {
 		fmt.Println("json unmarshal error: ", err)
 	}
 
-	walker(message[3])
+	walker(message[3], baseDir)
 }
 
 // run command with timeout
@@ -118,18 +124,11 @@ func CmdRunWithTimeout(cmd *exec.Cmd, timeout time.Duration) (error, bool) {
 	}
 }
 
-var basePath string
-
 // walk json
-func walker(i interface{}) {
-	copyPath := basePath
-	itemA := pathJoin()
-	itemB := pathJoin()
-	itemA(basePath)
-	itemB(copyPath)
+func walker(i interface{}, baseDir []string) {
 	switch i := i.(type) {
 	case []interface{}:
-		for t, v := range i {
+		for _, v := range i {
 			x, ok := v.(map[string]interface{})
 			if ok {
 				// ignore hlnkc
@@ -154,17 +153,22 @@ func walker(i interface{}) {
 				if !ok {
 					continue
 				}
-				// TODO: Use file stat
-				if uint64(a) == 4096 {
-					if t == 0 {
-						basePath = itemA(p)
-						fmt.Println("base", basePath)
-					}
-					copyPath = itemB(p)
-					fmt.Println("copy", copyPath)
+
+				if len(baseDir) > 0 {
+					// join path
+					p = path.Join(baseDir[len(baseDir)-1], p)
+				}
+
+				fi, err := os.Stat(p)
+				if err != nil {
+					// fmt.Println(err)
+					continue
+				}
+
+				if fi.IsDir() {
+					// push stack
+					baseDir = append(baseDir, p)
 				} else {
-					p = path.Join(copyPath, p)
-					fmt.Println(p)
 					result.msg[uint64(a)] = &meta{
 						Name:  p,
 						Asize: uint64(a),
@@ -173,28 +177,13 @@ func walker(i interface{}) {
 					// TODO: only append top 10 into slice
 					result.top = append(result.top, uint64(a))
 				}
-
 			} else {
-				walker(v)
+				walker(v, baseDir)
 			}
 		}
 	default:
 		// fmt.Println("default")
 	}
-}
-
-// join path
-func pathJoin() func(p string) string {
-	var base string
-	return func(p string) string {
-		if strings.HasPrefix(p, "/") {
-			base = p
-		} else {
-			base = path.Join(base, p)
-		}
-		return base
-	}
-
 }
 
 func QuickSort(values []uint64) {
