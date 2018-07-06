@@ -1,6 +1,12 @@
 # wncdu
 
-wncdu是对ncdu工具的一个封装，主要目的是快速显示最大的10个文件。
+wncdu是对ncdu工具的一个封装，主要目的是找出指定目录下最大的10个文件
+
+## 编译
+```bash
+cd /path/to/source
+go build -o wncdu
+```
 
 ##  用法
 ```bash

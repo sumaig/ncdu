@@ -41,9 +41,8 @@ func main() {
 		os.Exit(0)
 	}
 
-	// TODO: Automatic installation
 	if !isExist() {
-		fmt.Println("ncdu not exsit.")
+		fmt.Println("Need install ncdu.")
 		os.Exit(1)
 	}
 
@@ -99,7 +98,14 @@ func main() {
 func isExist() bool {
 	cmd := exec.Command("which", "ncdu")
 	if err := cmd.Run(); err != nil {
-		return false
+		// TODO: More platforms
+		install := exec.Command("yum", "install", "-q", "-y", "ncdu")
+		if err := install.Run(); err != nil {
+			fmt.Println(err)
+			return false
+		}
 	}
+
+
 	return true
 }
