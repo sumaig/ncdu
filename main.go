@@ -101,7 +101,7 @@ func isExist() bool {
 		// TODO: More platforms
 		install := exec.Command("yum", "install", "-q", "-y", "ncdu")
 		if err := install.Run(); err != nil {
-			fmt.Println(err)
+			// fmt.Println(err)
 			return false
 		}
 	}
